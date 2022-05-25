@@ -1,7 +1,6 @@
 package io.github.satwanjyu.compose_navigation
 
 import android.os.Bundle
-import android.os.Parcelable
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
@@ -12,12 +11,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import dev.olshevski.navigation.reimagined.NavBackHandler
-import dev.olshevski.navigation.reimagined.NavHost
-import dev.olshevski.navigation.reimagined.navigate
-import dev.olshevski.navigation.reimagined.rememberNavController
+import com.ramcosta.composedestinations.DestinationsNavHost
+import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.RootNavGraph
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import io.github.satwanjyu.compose_navigation.destinations.NextScreenDestination
+import io.github.satwanjyu.compose_navigation.destinations.WelcomeScreenDestination
 import io.github.satwanjyu.compose_navigation.ui.theme.ComposenavigationTheme
-import kotlinx.parcelize.Parcelize
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,56 +29,36 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    NavHostScreen()
+                    DestinationsNavHost(navGraph = NavGraphs.root)
                 }
             }
         }
     }
 }
 
-sealed class Screen : Parcelable {
-
-    @Parcelize
-    object First : Screen()
-
-    @Parcelize
-    data class Second(val id: Int) : Screen()
-
-    @Parcelize
-    data class Third(val text: String) : Screen()
+@RootNavGraph(start = true)
+@Destination
+@Composable
+fun WelcomeScreen(
+    navigator: DestinationsNavigator
+) {
+    Column {
+        Text(text = "Welcome")
+        Button(onClick = { navigator.navigate(NextScreenDestination()) }) {
+            Text(text = "To Next")
+        }
+    }
 }
 
+@Destination
 @Composable
-fun NavHostScreen() {
-    val navController = rememberNavController<Screen>(
-        startDestination = Screen.First
-    )
-
-    NavBackHandler(navController)
-
-    NavHost(navController) { screen ->
-        when (screen) {
-            Screen.First -> Column {
-                Text("First screen")
-                Button(onClick = {
-                    navController.navigate(Screen.Second(id = 42))
-                }) {
-                    Text("To Second screen")
-                }
-            }
-
-            is Screen.Second -> Column {
-                Text("Second screen: ${screen.id}")
-                Button(onClick = {
-                    navController.navigate(Screen.Third(text = "Hello"))
-                }) {
-                    Text("To Third screen")
-                }
-            }
-
-            is Screen.Third -> {
-                Text("Third screen: ${screen.text}")
-            }
+fun NextScreen(
+    navigator: DestinationsNavigator
+) {
+    Column {
+        Text(text = "Next")
+        Button(onClick = { navigator.navigate(WelcomeScreenDestination()) }) {
+            Text(text = "To Welcome")
         }
     }
 }
